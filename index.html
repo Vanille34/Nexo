@@ -137,8 +137,27 @@ body{
     color:#9a9a9a;
 }
 </style>
-</head>
 
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // 🔹 Configuration Firebase – remplace par tes infos
+  const firebaseConfig = {
+    apiKey: "TON_API_KEY",
+    authDomain: "TON_PROJET.firebaseapp.com",
+    projectId: "TON_PROJET",
+    storageBucket: "TON_PROJET.appspot.com",
+    messagingSenderId: "TON_ID",
+    appId: "TON_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+</script>
+
+</head>
 <body>
 
 <div class="top-bar">
@@ -150,7 +169,6 @@ body{
     <button class="filter-btn" id="nowBtn" style="background:#ff2d55;">NOW</button>
 </div>
 
-<!-- GRILLE PROFILS -->
 <div class="cards-container" id="cardsContainer"></div>
 
 <script>
@@ -163,8 +181,16 @@ const profiles = [
     {id:3,name:"Alex",age:27,bio:"Sport & chill",photo:"https://randomuser.me/api/portraits/men/68.jpg",lat:43.289,lon:3.185,online:true}
 ];
 
-let subscribed = new Set(JSON.parse(localStorage.getItem("subscribed"))||[]);
+let subscribed = new Set();
 
+const container = document.getElementById("cardsContainer");
+const searchInput = document.getElementById("searchInput");
+const onlineBtn = document.getElementById("onlineBtn");
+const subBtn = document.getElementById("subBtn");
+const distanceBtn = document.getElementById("distanceBtn");
+const nowBtn = document.getElementById("nowBtn");
+
+// 🔹 Calcul distance
 function calculateDistance(lat1,lon1,lat2,lon2){
     const R=6371;
     const dLat=(lat2-lat1)*Math.PI/180;
@@ -178,31 +204,31 @@ function formatDistance(km){
     return km<1?Math.round(km*1000)+" m":km.toFixed(1)+" km";
 }
 
-const container=document.getElementById("cardsContainer");
-const searchInput=document.getElementById("searchInput");
-const onlineBtn=document.getElementById("onlineBtn");
-const subBtn=document.getElementById("subBtn");
-const distanceBtn=document.getElementById("distanceBtn");
-const nowBtn=document.getElementById("nowBtn");
+// 🔹 Récupérer abonnements depuis Firestore
+db.collection("subscriptions").get().then(snapshot => {
+    snapshot.forEach(doc => subscribed.add(parseInt(doc.id)));
+    renderProfiles();
+}).catch(console.error);
 
+// 🔹 Rendu des profils
 function renderProfiles(){
     container.innerHTML="";
-    let filtered=[...profiles];
-    const search=searchInput.value.toLowerCase();
-    if(search) filtered=filtered.filter(p=>p.name.toLowerCase().includes(search));
-    if(showOnlineOnly) filtered=filtered.filter(p=>p.online);
-    if(showSubscribedOnly) filtered=filtered.filter(p=>subscribed.has(p.id));
-    if(sortByDistance) filtered.sort((a,b)=>calculateDistance(userLocation.lat,userLocation.lon,a.lat,a.lon)-calculateDistance(userLocation.lat,userLocation.lon,b.lat,b.lon));
+    let filtered = [...profiles];
+    const search = searchInput.value.toLowerCase();
+    if(search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
+    if(showOnlineOnly) filtered = filtered.filter(p => p.online);
+    if(showSubscribedOnly) filtered = filtered.filter(p => subscribed.has(p.id));
+    if(sortByDistance) filtered.sort((a,b) => calculateDistance(userLocation.lat,userLocation.lon,a.lat,a.lon)-calculateDistance(userLocation.lat,userLocation.lon,b.lat,b.lon));
 
-    filtered.forEach(profile=>{
-        const dist=calculateDistance(userLocation.lat,userLocation.lon,profile.lat,profile.lon);
-        const card=document.createElement("div");
-        card.className="profile-card";
-        card.onclick=()=>openProfile(profile);
-        const isSubscribed=subscribed.has(profile.id);
-        const subIcon="🔥";
-        const subClass=isSubscribed?"subscribe-btn following":"subscribe-btn";
-        card.innerHTML=`
+    filtered.forEach(profile => {
+        const dist = calculateDistance(userLocation.lat,userLocation.lon,profile.lat,profile.lon);
+        const card = document.createElement("div");
+        card.className = "profile-card";
+        card.onclick = () => openProfile(profile);
+        const isSubscribed = subscribed.has(profile.id);
+        const subIcon = "🔥";
+        const subClass = isSubscribed ? "subscribe-btn following" : "subscribe-btn";
+        card.innerHTML = `
             <img src="${profile.photo}">
             <div class="online-dot" style="background:${profile.online?'#00ff66':'#555'}"></div>
             <div class="${subClass}" onclick="toggleSubscribe(event,${profile.id})">${subIcon}</div>
@@ -216,26 +242,33 @@ function renderProfiles(){
     });
 }
 
-function toggleSubscribe(event,id){
+// 🔹 Toggle abonnement vers Firestore
+function toggleSubscribe(event, id){
     event.stopPropagation();
-    subscribed.has(id)?subscribed.delete(id):subscribed.add(id);
-    localStorage.setItem("subscribed",JSON.stringify([...subscribed]));
-    renderProfiles();
+    const docRef = db.collection("subscriptions").doc(id.toString());
+    if(subscribed.has(id)){
+        docRef.delete().then(() => {
+            subscribed.delete(id);
+            renderProfiles();
+        }).catch(console.error);
+    } else {
+        docRef.set({subscribed:true}).then(() => {
+            subscribed.add(id);
+            renderProfiles();
+        }).catch(console.error);
+    }
 }
 
-searchInput.addEventListener("input",renderProfiles);
-onlineBtn.onclick=()=>{showOnlineOnly=!showOnlineOnly; onlineBtn.classList.toggle("active"); renderProfiles();}
-subBtn.onclick=()=>{showSubscribedOnly=!showSubscribedOnly; subBtn.classList.toggle("active"); renderProfiles();}
-distanceBtn.onclick=()=>{sortByDistance=!sortByDistance; distanceBtn.classList.toggle("active"); renderProfiles();}
+// 🔹 Filtres et NOW
+searchInput.addEventListener("input", renderProfiles);
+onlineBtn.onclick = () => { showOnlineOnly = !showOnlineOnly; onlineBtn.classList.toggle("active"); renderProfiles(); }
+subBtn.onclick = () => { showSubscribedOnly = !showSubscribedOnly; subBtn.classList.toggle("active"); renderProfiles(); }
+distanceBtn.onclick = () => { sortByDistance = !sortByDistance; distanceBtn.classList.toggle("active"); renderProfiles(); }
+nowBtn.onclick = () => { window.location.href = "now.html"; }
 
-// NOW redirige directement vers now.html
-nowBtn.onclick = () => {
-    window.location.href = "now.html";
-}
-
-// Profils secondaires
+// 🔹 Profils secondaires
 function openProfile(profile){
-    localStorage.setItem("selectedProfile",JSON.stringify(profile));
+    localStorage.setItem("selectedProfile", JSON.stringify(profile));
     window.location.href="view-profile.html";
 }
 
@@ -243,6 +276,7 @@ function editMyProfile(){
     window.location.href="edit-profile.html";
 }
 
+// 🔹 Premier rendu
 renderProfiles();
 </script>
 
