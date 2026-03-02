@@ -12,8 +12,6 @@ body{
     background:#0f0f14;
     color:white;
 }
-
-/* 🔥 BANNIÈRE HAUTE */
 .top-bar{
     display:flex;
     align-items:center;
@@ -25,8 +23,6 @@ body{
     top:0;
     z-index:10;
 }
-
-/* CERCLE MON PROFIL */
 .my-profile{
     width:42px;
     height:42px;
@@ -35,8 +31,6 @@ body{
     object-fit:cover;
     cursor:pointer;
 }
-
-/* BARRE DE RECHERCHE */
 .search-input{
     flex:1;
     padding:8px 10px;
@@ -47,8 +41,6 @@ body{
     outline:none;
     font-size:13px;
 }
-
-/* BOUTONS FILTRE */
 .filter-btn{
     padding:7px 9px;
     border-radius:10px;
@@ -59,21 +51,16 @@ body{
     cursor:pointer;
     border:1px solid #333;
 }
-
 .filter-btn.active{
     background:#ff2d55;
     border-color:#ff2d55;
 }
-
-/* 3 COLONNES */
 .cards-container{
     display:grid;
     grid-template-columns: repeat(3, 1fr);
     gap:8px;
     padding:10px;
 }
-
-/* CARTE STYLE APP */
 .profile-card{
     position:relative;
     background:#111;
@@ -82,14 +69,11 @@ body{
     border:1.5px solid #ff2d55;
     cursor:pointer;
 }
-
 .profile-card img{
     width:100%;
     height:115px;
     object-fit:cover;
 }
-
-/* PASTILLE ONLINE */
 .online-dot{
     position:absolute;
     top:6px;
@@ -99,8 +83,6 @@ body{
     border-radius:50%;
     border:2px solid #0f0f14;
 }
-
-/* BOUTON ABONNÉ */
 .subscribe-btn{
     position:absolute;
     top:6px;
@@ -110,52 +92,30 @@ body{
     user-select:none;
     transition:0.2s;
 }
-
-/* Effet glow rouge pour abonnés */
 .subscribe-btn.following{
     color:#ff2d55;
     text-shadow: 0 0 12px #ff2d55, 0 0 20px #ff2d55, 0 0 28px #ff2d55;
 }
-
-/* INFOS */
 .profile-info{
     padding:6px;
 }
-
 .profile-name{
     font-size:13px;
     font-weight:bold;
 }
-
 .profile-distance{
     font-size:11px;
     color:#cfcfcf;
 }
-
 .profile-bio{
     font-size:10px;
     color:#9a9a9a;
 }
 </style>
 
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-  // 🔹 Configuration Firebase – remplace par tes infos
-  const firebaseConfig = {
-    apiKey: "TON_API_KEY",
-    authDomain: "TON_PROJET.firebaseapp.com",
-    projectId: "TON_PROJET",
-    storageBucket: "TON_PROJET.appspot.com",
-    messagingSenderId: "TON_ID",
-    appId: "TON_APP_ID"
-  };
-
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-</script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js"></script>
 
 </head>
 <body>
@@ -172,66 +132,69 @@ body{
 <div class="cards-container" id="cardsContainer"></div>
 
 <script>
+/* 🔹 CONFIGURATION FIREBASE 🔹 */
+const firebaseConfig = {
+    apiKey: "TON_API_KEY",
+    authDomain: "TON_PROJECT_ID.firebaseapp.com",
+    projectId: "TON_PROJECT_ID",
+    storageBucket: "TON_PROJECT_ID.appspot.com",
+    messagingSenderId: "TON_SENDER_ID",
+    appId: "TON_APP_ID"
+};
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* 🔹 VARIABLES 🔹 */
 const userLocation = { lat: 43.30, lon: 3.20 };
 let showOnlineOnly=false, showSubscribedOnly=false, sortByDistance=false;
+let subscribed = new Set(JSON.parse(localStorage.getItem("subscribed"))||[]);
 
-const profiles = [
-    {id:1,name:"Remi",age:30,bio:"Disponible",photo:"https://randomuser.me/api/portraits/men/32.jpg",lat:43.301,lon:3.198,online:true},
-    {id:2,name:"Léa",age:25,bio:"Aime discuter",photo:"https://randomuser.me/api/portraits/women/44.jpg",lat:43.315,lon:3.210,online:false},
-    {id:3,name:"Alex",age:27,bio:"Sport & chill",photo:"https://randomuser.me/api/portraits/men/68.jpg",lat:43.289,lon:3.185,online:true}
-];
+const container=document.getElementById("cardsContainer");
+const searchInput=document.getElementById("searchInput");
+const onlineBtn=document.getElementById("onlineBtn");
+const subBtn=document.getElementById("subBtn");
+const distanceBtn=document.getElementById("distanceBtn");
+const nowBtn=document.getElementById("nowBtn");
 
-let subscribed = new Set();
-
-const container = document.getElementById("cardsContainer");
-const searchInput = document.getElementById("searchInput");
-const onlineBtn = document.getElementById("onlineBtn");
-const subBtn = document.getElementById("subBtn");
-const distanceBtn = document.getElementById("distanceBtn");
-const nowBtn = document.getElementById("nowBtn");
-
-// 🔹 Calcul distance
+/* 🔹 CALCUL DISTANCE 🔹 */
 function calculateDistance(lat1,lon1,lat2,lon2){
     const R=6371;
     const dLat=(lat2-lat1)*Math.PI/180;
     const dLon=(lon2-lon1)*Math.PI/180;
-    const a=Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+    const a=Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
     const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
     return R*c;
 }
-
 function formatDistance(km){
     return km<1?Math.round(km*1000)+" m":km.toFixed(1)+" km";
 }
 
-// 🔹 Récupérer abonnements depuis Firestore
-db.collection("subscriptions").get().then(snapshot => {
-    snapshot.forEach(doc => subscribed.add(parseInt(doc.id)));
-    renderProfiles();
-}).catch(console.error);
-
-// 🔹 Rendu des profils
-function renderProfiles(){
+/* 🔹 RENDER PROFILS 🔹 */
+function renderProfiles(profiles){
     container.innerHTML="";
-    let filtered = [...profiles];
-    const search = searchInput.value.toLowerCase();
-    if(search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search));
-    if(showOnlineOnly) filtered = filtered.filter(p => p.online);
-    if(showSubscribedOnly) filtered = filtered.filter(p => subscribed.has(p.id));
-    if(sortByDistance) filtered.sort((a,b) => calculateDistance(userLocation.lat,userLocation.lon,a.lat,a.lon)-calculateDistance(userLocation.lat,userLocation.lon,b.lat,b.lon));
+    const search=searchInput.value.toLowerCase();
+    let filtered = profiles.filter(p => {
+        if(search && !p.name.toLowerCase().includes(search)) return false;
+        if(showOnlineOnly && !p.online) return false;
+        if(showSubscribedOnly && !subscribed.has(p.id)) return false;
+        return true;
+    });
+    if(sortByDistance){
+        filtered.sort((a,b)=>calculateDistance(userLocation.lat,userLocation.lon,a.lat,a.lon)-calculateDistance(userLocation.lat,userLocation.lon,b.lat,b.lon));
+    }
 
-    filtered.forEach(profile => {
+    filtered.forEach(profile=>{
         const dist = calculateDistance(userLocation.lat,userLocation.lon,profile.lat,profile.lon);
-        const card = document.createElement("div");
-        card.className = "profile-card";
-        card.onclick = () => openProfile(profile);
-        const isSubscribed = subscribed.has(profile.id);
-        const subIcon = "🔥";
-        const subClass = isSubscribed ? "subscribe-btn following" : "subscribe-btn";
-        card.innerHTML = `
+        const card=document.createElement("div");
+        card.className="profile-card";
+        card.onclick=()=>openProfile(profile);
+        const isSubscribed=subscribed.has(profile.id);
+        const subIcon="🔥";
+        const subClass=isSubscribed?"subscribe-btn following":"subscribe-btn";
+        card.innerHTML=`
             <img src="${profile.photo}">
             <div class="online-dot" style="background:${profile.online?'#00ff66':'#555'}"></div>
-            <div class="${subClass}" onclick="toggleSubscribe(event,${profile.id})">${subIcon}</div>
+            <div class="${subClass}" onclick="toggleSubscribe(event,'${profile.id}')">${subIcon}</div>
             <div class="profile-info">
                 <div class="profile-name">${profile.name}, ${profile.age}</div>
                 <div class="profile-distance">${formatDistance(dist)}</div>
@@ -242,12 +205,50 @@ function renderProfiles(){
     });
 }
 
-// 🔹 Toggle abonnement vers Firestore
-function toggleSubscribe(event, id){
+/* 🔹 TOGGLE ABONNEMENT 🔹 */
+function toggleSubscribe(event,id){
     event.stopPropagation();
-    const docRef = db.collection("subscriptions").doc(id.toString());
-    if(subscribed.has(id)){
-        docRef.delete().then(() => {
+    subscribed.has(id)?subscribed.delete(id):subscribed.add(id);
+    localStorage.setItem("subscribed",JSON.stringify([...subscribed]));
+    fetchProfiles(); // recharge depuis Firestore
+}
+
+/* 🔹 FETCH FIRESTORE 🔹 */
+function fetchProfiles(){
+    db.collection("profiles").get()
+    .then(snapshot => {
+        const profiles = [];
+        snapshot.forEach(doc => {
+            profiles.push({ id: doc.id, ...doc.data() });
+        });
+        renderProfiles(profiles);
+    })
+    .catch(err => console.error(err));
+}
+
+/* 🔹 NOW REDIRECT 🔹 */
+nowBtn.onclick = () => window.location.href = "now.html";
+
+/* 🔹 PROFILS SECONDAIRES 🔹 */
+function openProfile(profile){
+    localStorage.setItem("selectedProfile",JSON.stringify(profile));
+    window.location.href="view-profile.html";
+}
+function editMyProfile(){
+    window.location.href="edit-profile.html";
+}
+
+/* 🔹 EVENTS 🔹 */
+searchInput.addEventListener("input",fetchProfiles);
+onlineBtn.onclick=()=>{showOnlineOnly=!showOnlineOnly; onlineBtn.classList.toggle("active"); fetchProfiles();}
+subBtn.onclick=()=>{showSubscribedOnly=!showSubscribedOnly; subBtn.classList.toggle("active"); fetchProfiles();}
+distanceBtn.onclick=()=>{sortByDistance=!sortByDistance; distanceBtn.classList.toggle("active"); fetchProfiles();}
+
+/* 🔹 INITIAL RENDER 🔹 */
+fetchProfiles();
+</script>
+</body>
+</html> docRef.delete().then(() => {
             subscribed.delete(id);
             renderProfiles();
         }).catch(console.error);
