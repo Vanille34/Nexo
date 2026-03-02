@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NOW</title>
+<style>
+html, body{
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+  color:white;
+  min-height:100vh;
+  overflow:hidden;
+  background:#1c1c1f;
+  position:relative;
+}
+
+/* Halo rouge subtil */
+body::after{
+  content:"";
+  position:fixed;
+  inset:0;
+  background: radial-gradient(circle at 30% 20%, rgba(255,0,0,0.08), transparent 60%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* SVG Vagues */
+svg {
+  position: fixed;
+  width: 140%;
+  height: 140%;
+  top: -20%;
+  left: -20%;
+  z-index:0;
+}
+
+path {
+  fill: none;
+  stroke: #0a0a0a;
+  stroke-width: 60;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 14px rgba(255,0,0,0.35));
+  animation: move 20s ease-in-out infinite alternate;
+}
+
+path:nth-child(2) { stroke-width: 45; animation-duration: 26s; opacity:0.85;}
+path:nth-child(3) { stroke-width: 70; animation-duration: 32s; opacity:0.75;}
+path:nth-child(4) { stroke-width: 35; animation-duration: 24s; opacity:0.7;}
+
+@keyframes move {
+  0% { transform: translate(0,0);}
+  50% { transform: translate(-60px,40px);}
+  100% { transform: translate(60px,-40px);}
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px;
+  background:#111;
+  border-bottom:2px solid #ff2d55;
+  z-index:1;
+  position:relative;
+}
+
+.header button{
+  background:#ff2d55;
+  color:white;
+  border:none;
+  padding:8px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-weight:bold;
+  transition:0.2s;
+}
+
+.header button:disabled{
+  background:#444;
+  cursor:not-allowed;
+}
+
+/* GRID NOW */
+#nowGrid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  padding:12px;
+  z-index:1;
+  position:relative;
+}
+
+/* CARD */
+.now-card{
+  background:#1a1a22;
+  padding:10px;
+  border-radius:14px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  cursor:pointer;
+  transition:0.2s;
+  border:1px solid transparent;
+  position:relative;
+}
+
+.now-card:hover{
+  transform:scale(1.05);
+  border:1px solid #ff2d55;
+  box-shadow:0 0 15px rgba(255,45,85,0.5);
+}
+
+.now-card img{
+  width:80px;
+  height:80px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+.name{
+  margin-top:6px;
+  font-weight:bold;
+}
+
+.countdown{
+  font-size:12px;
+  margin-top:4px;
+  color:#ff2d55;
+  font-weight:bold;
+}
+
+/* Bouton notifier */
+.notifyBtn{
+  margin-top:6px;
+  background:#ff2d55;
+  color:white;
+  border:none;
+  border-radius:6px;
+  padding:4px 8px;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:bold;
+  transition:0.2s;
+}
+
+.notifyBtn:disabled{
+  background:#444;
+  cursor:not-allowed;
+}
+
+/* Explosion */
+.explosion{
+  position:fixed;
+  top:50%;
+  left:50%;
+  width:20px;
+  height:20px;
+  pointer-events:none;
+  z-index:999;
+}
+
+.particle{
+  position:absolute;
+  width:8px;
+  height:8px;
+  background:#ff2d55;
+  border-radius:50%;
+  animation:explode 0.8s ease-out forwards;
+  box-shadow:0 0 10px #ff2d55;
+}
+
+@keyframes explode{
+  0%{ transform:translate(0,0) scale(1); opacity:1;}
+  100%{ transform:translate(var(--x),var(--y)) scale(0.3); opacity:0;}
+}
+
+/* Notification chat */
+.chat-notif{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#ff2d55;
+  color:white;
+  padding:10px 16px;
+  border-radius:12px;
+  font-weight:bold;
+  box-shadow:0 0 12px rgba(255,45,85,0.6);
+  z-index:9999;
+  animation:fadeOut 5s forwards;
+}
+
+@keyframes fadeOut{
+  0%{opacity:1;}
+  90%{opacity:1;}
+  100%{opacity:0;}
+}
+</style>
+</head>
+<body>
+
+<!-- VAGUES SVG -->
+<svg viewBox="0 0 1200 900" preserveAspectRatio="none">
+  <path d="M0,400 C300,150 600,650 900,350 C1100,200 1400,600 1600,300" />
+  <path d="M0,600 C250,450 650,850 950,550 C1250,300 1500,750 1700,500" />
+  <path d="M0,200 C400,450 700,-50 1000,300 C1300,550 1600,150 1800,400" />
+  <path d="M0,750 C350,500 750,1000 1100,650 C1450,400 1750,850 2000,600" />
+</svg>
+
+<div class="header">
+  <div>🔥 Grille NOW</div>
+  <button id="nowBtn">NOW</button>
+</div>
+
+<div id="nowGrid"></div>
+
+<script>
+const NOW_DURATION = 5*60*1000;
+const COOLDOWN = 20*60*1000;
+
+const profiles = [
+  {id:1,name:"Moi",photo:"https://i.pravatar.cc/100?img=3"},
+  {id:999,name:"TestUser",photo:"https://i.pravatar.cc/100?img=5"}
+];
+
+const nowGrid = document.getElementById("nowGrid");
+const nowBtn = document.getElementById("nowBtn");
+
+/* Explosion */
+function createExplosion(){
+  const explosion = document.createElement("div");
+  explosion.className = "explosion";
+  document.body.appendChild(explosion);
+  for(let i=0;i<25;i++){
+    const particle = document.createElement("div");
+    particle.className = "particle";
+    const angle = Math.random()*2*Math.PI;
+    const radius = 100+Math.random()*80;
+    particle.style.setProperty("--x",Math.cos(angle)*radius+"px");
+    particle.style.setProperty("--y",Math.sin(angle)*radius+"px");
+    explosion.appendChild(particle);
+  }
+  setTimeout(()=>explosion.remove(),800);
+}
+
+/* Notification chat */
+function showChatNotification(profileName){
+  const notif = document.createElement("div");
+  notif.className = "chat-notif";
+  notif.textContent = `${profileName} est disponible maintenant !`;
+  document.body.appendChild(notif);
+  setTimeout(()=>notif.remove(),5000);
+}
+
+/* Affichage profil */
+function displayNowProfile(profile,endTime){
+  const card = document.createElement("div");
+  card.className = "now-card";
+
+  const avatar = document.createElement("img");
+  avatar.src = profile.photo;
+
+  const name = document.createElement("div");
+  name.className = "name";
+  name.textContent = profile.name;
+
+  const countdown = document.createElement("div");
+  countdown.className = "countdown";
+
+  const notifyBtn = document.createElement("button");
+  notifyBtn.className = "notifyBtn";
+  notifyBtn.textContent = "Notifier";
+  notifyBtn.addEventListener("click", ()=>{
+    showChatNotification(profile.name);
+  });
+
+  card.appendChild(avatar);
+  card.appendChild(name);
+  card.appendChild(countdown);
+  card.appendChild(notifyBtn);
+
+  nowGrid.appendChild(card);
+
+  const interval = setInterval(()=>{
+    let remaining = Math.max(0,endTime-Date.now());
+    let m = Math.floor(remaining/60000);
+    let s = Math.floor((remaining%60000)/1000);
+    countdown.textContent = `⏳ ${m}m ${s}s`;
+
+    if(remaining<=0){
+      clearInterval(interval);
+      card.remove();
+      localStorage.removeItem("nowActiveUntil");
+    }
+  },1000);
+}
+
+/* Cooldown bouton */
+function startCooldown(lastUse){
+  nowBtn.disabled = true;
+  const interval = setInterval(()=>{
+    const elapsed = Date.now() - lastUse;
+    const remaining = COOLDOWN - elapsed;
+
+    if(remaining<=0){
+      clearInterval(interval);
+      nowBtn.disabled = false;
+      nowBtn.textContent = "NOW";
+      localStorage.removeItem("lastNowUse");
+    }else{
+      const m = Math.floor(remaining/60000);
+      const s = Math.floor((remaining%60000)/1000);
+      nowBtn.textContent = `⏳ ${m}m ${s}s`;
+    }
+  },1000);
+}
+
+/* Vérification au chargement */
+window.onload = ()=>{
+  const lastUse = localStorage.getItem("lastNowUse");
+  if(lastUse && Date.now() - lastUse < COOLDOWN){
+    startCooldown(parseInt(lastUse));
+  }
+
+  // Faux profil permanent pour test
+  displayNowProfile(profiles[1],Date.now()+NOW_DURATION);
+
+  // Vérifie profil actif
+  const activeUntil = localStorage.getItem("nowActiveUntil");
+  if(activeUntil && Date.now() < activeUntil){
+    displayNowProfile(profiles[0],parseInt(activeUntil));
+  }
+};
+
+/* Click NOW */
+nowBtn.addEventListener("click", ()=>{
+  const lastUse = localStorage.getItem("lastNowUse");
+  if(lastUse && Date.now()-lastUse<COOLDOWN) return;
+
+  createExplosion();
+  const endTime = Date.now() + NOW_DURATION;
+  localStorage.setItem("nowActiveUntil",endTime);
+  localStorage.setItem("lastNowUse",Date.now());
+  displayNowProfile(profiles[0],endTime);
+  startCooldown(Date.now());
+});
+</script>
+</body>
+</html>

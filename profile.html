@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profil - Nexo</title>
+<style>
+body { font-family: Arial; margin:0; background:#0f0f0f; color:white; text-align:center; }
+header { background:#1a1a1a; padding:15px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #333; }
+button { padding:8px 12px; border:none; border-radius:8px; cursor:pointer; background:#ff2d55; color:white; font-weight:bold; }
+button:hover { opacity:0.9; }
+.profile-card { margin-top:20px; }
+.profile-card img { width:130px; height:130px; border-radius:50%; object-fit:cover; border:3px solid #ff2d55; }
+.name { font-size:24px; margin-top:10px; }
+.age { color:#ccc; font-size:16px; }
+#chatSection { width:90%; max-width:420px; margin:20px auto; }
+#chatContainer { height:320px; overflow-y:auto; background:#1c1c1c; border-radius:12px; padding:10px; border:1px solid #333; text-align:left; }
+.message { padding:8px 12px; margin:6px 0; border-radius:14px; max-width:75%; word-wrap:break-word; }
+.me { background:#ff2d55; margin-left:auto; text-align:right; }
+.other { background:#2a2a2a; margin-right:auto; text-align:left; }
+.chat-input { display:flex; gap:5px; margin-top:10px; }
+.chat-input input { flex:1; padding:10px; border-radius:8px; border:none; outline:none; background:#1c1c1c; color:white; }
+#accessControl { margin-top:10px; }
+#accessControl button { background:#0099ff; }
+#goldBtn { margin-top:15px; background:gold; color:black; display:inline-block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div>Profil</div>
+  <button onclick="goBack()">⬅ Retour</button>
+</header>
+
+<div class="profile-card" id="profileCard">
+  Chargement du profil...
+</div>
+
+<div id="accessControl"></div>
+
+<div id="chatSection">
+  <h3>💬 Chat</h3>
+  <div id="chatContainer"></div>
+  <div class="chat-input" id="chatInputBox">
+    <input type="text" id="msgInput" placeholder="Écrire un message...">
+    <button onclick="sendMessage()">Envoyer</button>
+  </div>
+</div>
+
+<div id="goldBtn" onclick="buyGold()">💎 Passer en GOLD (paiement à venir)</div>
+
+<script>
+const currentUser = localStorage.getItem("currentUser");
+if(!currentUser) window.location.href="login.html";
+
+const params = new URLSearchParams(window.location.search);
+const profilePseudo = params.get("id");
+if(!profilePseudo) window.location.href="index.html";
+
+const profileData = JSON.parse(localStorage.getItem("profile_" + profilePseudo)) || {
+    pseudo: profilePseudo,
+    age: 25,
+    photo: "https://i.pravatar.cc/150?u=" + profilePseudo
+};
+
+const profileCard = document.getElementById("profileCard");
+profileCard.innerHTML = `
+  <img src="${profileData.photo}">
+  <div class="name">${profileData.pseudo}</div>
+  <div class="age">${profileData.age ? profileData.age+" ans" : ""}</div>
+`;
+
+// =================== Gestion profil anonyme ===================
+const isAnonymous = profilePseudo.startsWith("Ano_");
+if(isAnonymous){
+    document.getElementById("goldBtn").style.display="none";
+    document.getElementById("chatInputBox").style.display="none";
+}
+
+// =================== Gestion accès ===================
+let accessList = JSON.parse(localStorage.getItem("access_" + profilePseudo)) || [];
+const accessDiv = document.getElementById("accessControl");
+
+if(currentUser === profilePseudo && !isAnonymous){
+    accessDiv.innerHTML = '<button id="toggleAccessBtn">Autoriser / Révoquer l’accès</button>';
+    const toggleBtn = document.getElementById("toggleAccessBtn");
+    toggleBtn.onclick = function(){
+        const otherUser = prompt("Entrez le pseudo de l'utilisateur à autoriser ou révoquer :");
+        if(!otherUser) return;
+        if(accessList.includes(otherUser)){
+            accessList = accessList.filter(u => u !== otherUser);
+        } else {
+            accessList.push(otherUser);
+        }
+        localStorage.setItem("access_" + profilePseudo, JSON.stringify(accessList));
+        alert("Liste d'accès mise à jour !");
+    };
+}
+
+// =================== Chat ===================
+const chatContainer = document.getElementById("chatContainer");
+const chatInputBox = document.getElementById("chatInputBox");
+const msgInput = document.getElementById("msgInput");
+
+let chatKey = "chat_" + [currentUser, profilePseudo].sort().join("_");
+let messages = JSON.parse(localStorage.getItem(chatKey)) || [];
+
+function renderChat(){
+    chatContainer.innerHTML="";
+    if(messages.length===0){
+        chatContainer.innerHTML="<i>Aucun message pour le moment. Dites bonjour 👋</i>";
+        return;
+    }
+    messages.forEach(msg=>{
+        const div = document.createElement("div");
+        div.classList.add("message");
+        div.classList.add(msg.sender===currentUser ? "me":"other");
+        div.textContent=msg.text;
+        chatContainer.appendChild(div);
+    });
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+window.sendMessage = function(){
+    if(!accessList.includes(currentUser) && !isAnonymous){
+        alert("Vous n'êtes pas autorisé à envoyer un message à ce profil.");
+        return;
+    }
+    const text = msgInput.value.trim();
+    if(!text) return;
+    messages.push({sender: currentUser, text: text});
+    localStorage.setItem(chatKey, JSON.stringify(messages));
+    msgInput.value="";
+    renderChat();
+};
+
+renderChat();
+
+// =================== Navigation ===================
+function goBack(){ window.location.href="index.html"; }
+
+// =================== GOLD ===================
+function buyGold(){
+    alert("💎 Paiement GOLD bientôt disponible (Stripe/PayPal à intégrer)");
+}
+
+</script>
+
+</body>
+</html>

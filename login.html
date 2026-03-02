@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion - Nexo</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #0f0f0f;
+    color: white;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.container {
+    background: #1c1c1c;
+    padding: 30px;
+    border-radius: 15px;
+    width: 300px;
+    box-shadow: 0 0 10px #ff2d55;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+h2 { margin-bottom: 20px; }
+input {
+    width: 90%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    border: 2px solid #ff2d55;
+    background: #1c1c1c;
+    color: white;
+    outline: none;
+}
+input::placeholder { color: #FFB3C6; }
+.button-row { display: flex; justify-content: space-between; width: 100%; }
+button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+button.primary { background: #FF2D55; color: white; }
+button.primary:hover { background: #ff4a70; }
+button.blue { background: #2d8cff; color: white; }
+button.blue:hover { background: #5aa0ff; }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Nexo</h2>
+    <input type="text" id="pseudo" placeholder="Pseudo">
+    <input type="password" id="password" placeholder="Mot de passe">
+    <input type="password" id="confirmPassword" placeholder="Confirmer mot de passe">
+    
+    <div class="button-row">
+        <button class="primary" onclick="register()">S'inscrire</button>
+        <button class="primary" onclick="login()">Se connecter</button>
+    </div>
+    <button class="blue" style="margin-top:10px;" onclick="anonymousLogin()">Connexion Anonyme</button>
+</div>
+
+<script>
+// ================= UTILISATEURS =================
+function register(){
+    const pseudo = document.getElementById('pseudo').value.trim();
+    const password = document.getElementById('password').value.trim();
+    const confirmPassword = document.getElementById('confirmPassword').value.trim();
+    if(!pseudo || !password || !confirmPassword){ alert("Tous les champs sont obligatoires !"); return; }
+    if(password !== confirmPassword){ alert("Les mots de passe ne correspondent pas !"); return; }
+
+    let users = JSON.parse(localStorage.getItem('users') || "[]");
+    if(users.find(u => u.pseudo === pseudo)){ alert("Ce pseudo est déjà utilisé !"); return; }
+
+    users.push({pseudo, password});
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('currentUser', pseudo);
+    alert("Inscription réussie !");
+    window.location.href = 'index.html';
+}
+
+function login(){
+    const pseudo = document.getElementById('pseudo').value.trim();
+    const password = document.getElementById('password').value.trim();
+    if(!pseudo || !password){ alert("Tous les champs sont obligatoires !"); return; }
+
+    let users = JSON.parse(localStorage.getItem('users') || "[]");
+    const user = users.find(u => u.pseudo === pseudo && u.password === password);
+    if(!user){ alert("Pseudo ou mot de passe incorrect !"); return; }
+
+    localStorage.setItem('currentUser', pseudo);
+    window.location.href = 'index.html';
+}
+
+function anonymousLogin(){
+    let anonId = "Ano_" + Math.floor(Math.random()*10000);
+    localStorage.setItem('currentUser', anonId);
+    window.location.href = 'index.html';
+}
+</script>
+
+</body>
+</html>

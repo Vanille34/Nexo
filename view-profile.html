@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat</title>
+<style>
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#0f0f14;
+color:white;
+display:flex;
+flex-direction:column;
+height:100vh;
+}
+
+/* HEADER */
+.header{
+display:flex;
+align-items:center;
+padding:12px;
+background:#111;
+border-bottom:2px solid #ff2d55;
+position:relative;
+}
+
+.header img{
+width:50px;
+height:50px;
+border-radius:50%;
+object-fit:cover;
+margin-right:10px;
+}
+
+.header .info{
+font-weight:bold;
+display:flex;
+align-items:center;
+gap:8px;
+}
+
+/* BOUTON VOIR LE PROFIL */
+.view-profile-btn {
+    margin-left:auto;
+    background:none;
+    border:none;
+    color:#ff2d55;
+    font-weight:bold;
+    cursor:pointer;
+    font-size:14px;
+    padding:6px 10px;
+    border-radius:8px;
+    text-shadow: 0 0 4px #ff2d55;
+    transition: all 0.2s ease-in-out;
+}
+
+.view-profile-btn:hover {
+    background:#ff2d55;
+    color:#111;
+    text-shadow: none;
+    box-shadow: 0 0 12px #ff2d55, 0 0 20px #ff2d55;
+}
+
+/* CHAT */
+#chat{
+flex:1;
+padding:12px;
+overflow-y:auto;
+display:flex;
+flex-direction:column;
+gap:8px;
+}
+
+.message{
+max-width:70%;
+padding:8px 12px;
+border-radius:12px;
+position:relative;
+overflow:hidden;
+}
+
+.me{
+background:#ff2d55;
+align-self:flex-end;
+}
+
+.other{
+background:#222;
+align-self:flex-start;
+}
+
+.message img{
+max-width:150px;
+border-radius:10px;
+display:block;
+}
+
+/* TIMER */
+.timer{
+font-size:10px;
+margin-top:4px;
+color:#ff2d55;
+font-weight:bold;
+}
+
+/* EXPLOSION PARTICULES */
+.particle{
+position:absolute;
+width:6px;
+height:6px;
+background:#ff2d55;
+border-radius:50%;
+pointer-events:none;
+animation:explode 0.6s forwards;
+}
+
+@keyframes explode{
+0%{
+transform:translate(0,0) scale(1);
+opacity:1;
+}
+100%{
+transform:translate(var(--x), var(--y)) scale(0);
+opacity:0;
+}
+}
+
+/* INPUT */
+.input-area{
+display:flex;
+padding:10px;
+background:#111;
+gap:8px;
+}
+
+.input-area input{
+flex:1;
+padding:8px;
+border-radius:8px;
+border:none;
+}
+
+.input-area button{
+padding:8px 12px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+#sendBtn{
+background:#ff2d55;
+color:white;
+}
+
+#photoBtn{
+background:#333;
+color:white;
+}
+
+#premiumBtn{
+display:none;
+background:#ff2d55;
+color:white;
+font-weight:bold;
+}
+
+/* MODAL PROFIL */
+.modal {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.8);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:100;
+}
+
+.modal-content {
+  background:#1c1c1c;
+  padding:20px;
+  border-radius:12px;
+  width:90%;
+  max-width:350px;
+  max-height:90%;
+  overflow:auto;
+  border:2px solid #ff2d55;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+
+.modal-content img.profile-pic {
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  border:2px solid #ff2d55;
+  object-fit:cover;
+}
+
+.modal-content .bio {
+  font-size:14px;
+  color:#cfcfcf;
+  text-align:center;
+}
+
+.modal-content .age {
+  font-size:12px;
+  color:#ff2d55;
+}
+
+.modal-content .posts {
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:6px;
+  width:100%;
+}
+
+.modal-content .post-container {
+  position:relative;
+}
+
+.modal-content .post-container img {
+  width:100%;
+  border-radius:8px;
+  object-fit:cover;
+}
+
+.modal-content .like-btn {
+  position:absolute;
+  bottom:4px;
+  right:4px;
+  background:rgba(0,0,0,0.5);
+  border:none;
+  border-radius:6px;
+  color:white;
+  font-size:14px;
+  padding:2px 6px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:2px;
+}
+
+.modal-content .like-btn.liked {
+  color:#ff2d55;
+  font-weight:bold;
+}
+
+.close-btn {
+  padding:6px 12px;
+  background:#ff2d55;
+  border:none;
+  border-radius:8px;
+  color:white;
+  cursor:pointer;
+  margin-top:6px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+<img id="profilePhoto">
+<div class="info">
+<span id="profileName"></span>
+</div>
+<button id="viewProfileBtn" class="view-profile-btn">Voir le profil</button>
+</div>
+
+<div id="chat"></div>
+
+<div class="input-area">
+<input type="text" id="messageInput" placeholder="Écrire un message...">
+<button id="sendBtn">Envoyer</button>
+<input type="file" id="photoInput" accept="image/*" hidden>
+<button id="photoBtn">📷</button>
+<button id="premiumBtn">Passer Gold</button>
+</div>
+
+<!-- MODAL PROFIL -->
+<div class="modal" id="profileModal">
+  <div class="modal-content">
+    <img id="modalPhoto" class="profile-pic" src="">
+    <div id="modalName"></div>
+    <div class="age" id="modalAge"></div>
+    <div class="bio" id="modalBio"></div>
+    <div class="posts" id="modalPosts"></div>
+    <button class="close-btn" id="closeModalBtn">Fermer</button>
+  </div>
+</div>
+
+<script>
+/* PROFIL */
+const selectedProfile = JSON.parse(localStorage.getItem("selectedProfile")) || {
+name:"Utilisateur",
+photo:"https://i.pravatar.cc/100",
+age:25,
+bio:"Pas encore de bio",
+posts:[],
+likes:{}, // index: nombre de likes par photo
+accountType:"classique"
+}
+
+// Ajout de publications de test si vide
+if(!selectedProfile.posts || selectedProfile.posts.length===0){
+    selectedProfile.posts = [
+        "https://i.pravatar.cc/150?img=1",
+        "https://i.pravatar.cc/150?img=2",
+        "https://i.pravatar.cc/150?img=3"
+    ];
+    selectedProfile.likes = {0:2,1:5,2:0};
+    localStorage.setItem("selectedProfile",JSON.stringify(selectedProfile));
+}
+
+document.getElementById("profileName").textContent = selectedProfile.name
+document.getElementById("profilePhoto").src = selectedProfile.photo
+
+/* BOUTON VOIR LE PROFIL */
+const modal = document.getElementById("profileModal")
+const closeModalBtn = document.getElementById("closeModalBtn")
+document.getElementById("viewProfileBtn").addEventListener("click",()=>{
+    document.getElementById("modalPhoto").src = selectedProfile.photo
+    document.getElementById("modalName").textContent = selectedProfile.name
+    document.getElementById("modalAge").textContent = "Âge: "+(selectedProfile.age||"?")
+    document.getElementById("modalBio").textContent = selectedProfile.bio||"Pas encore de bio"
+
+    const postsContainer = document.getElementById("modalPosts")
+    postsContainer.innerHTML = ""
+    selectedProfile.posts.forEach((p,index)=>{
+        const postDiv = document.createElement("div")
+        postDiv.className = "post-container"
+        const img = document.createElement("img")
+        img.src = p
+        const likeBtn = document.createElement("button")
+        likeBtn.className="like-btn"
+        const likesCount = selectedProfile.likes[index]||0
+        likeBtn.innerHTML = `❤️ ${likesCount}`
+        if(selectedProfile.likes[index]) likeBtn.classList.add("liked")
+        likeBtn.addEventListener("click",(e)=>{
+            e.stopPropagation()
+            selectedProfile.likes[index] = selectedProfile.likes[index]||0
+            if(likeBtn.classList.contains("liked")){
+                selectedProfile.likes[index]--
+                likeBtn.classList.remove("liked")
+            }else{
+                selectedProfile.likes[index]++
+                likeBtn.classList.add("liked")
+            }
+            likeBtn.innerHTML=`❤️ ${selectedProfile.likes[index]}`
+            localStorage.setItem("selectedProfile",JSON.stringify(selectedProfile))
+        })
+        postDiv.appendChild(img)
+        postDiv.appendChild(likeBtn)
+        postsContainer.appendChild(postDiv)
+    })
+
+    modal.style.display="flex"
+})
+closeModalBtn.addEventListener("click",()=>{modal.style.display="none"})
+
+/* CHAT */
+const chat = document.getElementById("chat")
+const messageInput = document.getElementById("messageInput")
+const sendBtn = document.getElementById("sendBtn")
+const photoBtn = document.getElementById("photoBtn")
+const photoInput = document.getElementById("photoInput")
+const premiumBtn = document.getElementById("premiumBtn")
+
+let photoCount = parseInt(localStorage.getItem("photoCount")) || 0
+const PHOTO_LIMIT = 3
+const accountType = selectedProfile.accountType
+
+function checkPhotoLimit(){
+if(accountType==="gold"){
+photoBtn.style.display="inline-block"
+premiumBtn.style.display="none"
+return
+}
+if(photoCount >= PHOTO_LIMIT){
+photoBtn.style.display="none"
+premiumBtn.style.display="inline-block"
+}else{
+photoBtn.style.display="inline-block"
+premiumBtn.style.display="none"
+}
+}
+checkPhotoLimit()
+
+function explodeMessage(msg){
+for(let i=0;i<12;i++){
+const particle=document.createElement("div")
+particle.className="particle"
+
+const x=(Math.random()*100-50)+"px"
+const y=(Math.random()*100-50)+"px"
+
+particle.style.setProperty("--x",x)
+particle.style.setProperty("--y",y)
+
+particle.style.left="50%"
+particle.style.top="50%"
+
+msg.appendChild(particle)
+}
+
+msg.style.transition="opacity 0.4s ease, transform 0.4s ease"
+msg.style.opacity="0"
+msg.style.transform="scale(0.8)"
+
+setTimeout(()=>{
+msg.remove()
+},400)
+}
+
+function addMessage(content,type,isImage=false){
+const msg=document.createElement("div")
+msg.className="message "+type
+
+if(isImage){
+const img=document.createElement("img")
+img.src=content
+msg.appendChild(img)
+
+const timer=document.createElement("div")
+timer.className="timer"
+msg.appendChild(timer)
+
+let remaining=5
+timer.textContent=`⏳ ${remaining}s`
+
+const interval=setInterval(()=>{
+remaining--
+timer.textContent=`⏳ ${remaining}s`
+if(remaining<=0){
+clearInterval(interval)
+explodeMessage(msg)
+}
+},1000)
+
+}else{
+msg.textContent=content
+}
+
+chat.appendChild(msg)
+chat.scrollTop=chat.scrollHeight
+}
+
+sendBtn.addEventListener("click",()=>{
+if(messageInput.value.trim()!==""){
+addMessage(messageInput.value,"me")
+messageInput.value=""
+setTimeout(()=>{addMessage("Message reçu 👍","other")},1000)
+}
+})
+
+photoBtn.addEventListener("click",()=>{photoInput.click()})
+
+photoInput.addEventListener("change",(e)=>{
+const file=e.target.files[0]
+if(!file) return
+if(accountType!=="gold" && photoCount >= PHOTO_LIMIT){
+checkPhotoLimit()
+return
+}
+const reader=new FileReader()
+reader.onload=function(event){
+addMessage(event.target.result,"me",true)
+photoCount++
+localStorage.setItem("photoCount",photoCount)
+selectedProfile.posts = selectedProfile.posts || []
+selectedProfile.posts.push(event.target.result)
+selectedProfile.likes[selectedProfile.posts.length-1] = 0
+localStorage.setItem("selectedProfile",JSON.stringify(selectedProfile))
+checkPhotoLimit()
+setTimeout(()=>{addMessage("https://i.pravatar.cc/150?img=12","other",true)},2000)
+}
+reader.readAsDataURL(file)
+})
+
+premiumBtn.addEventListener("click",()=>{alert("Passage Gold bientôt disponible 💎")})
+</script>
+
+</body>
+</html>

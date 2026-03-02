@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Profil - Nexo</title>
+<link rel="stylesheet" href="style.css">
+<style>
+/* Container profil */
+.container { padding:20px; display:flex; flex-direction:column; align-items:center; }
+
+/* Box profil */
+.profile-box {
+    background:#1c1c1c;
+    border:2px solid #FF2D55;
+    border-radius:15px;
+    padding:15px;
+    text-align:center;
+    width:90%;
+    max-width:400px;
+    margin-bottom:20px;
+}
+
+.profile-box input, .profile-box textarea {
+    width:95%;
+    padding:8px;
+    margin-bottom:10px;
+    border:2px solid #FF2D55;
+    border-radius:10px;
+    background:#1c1c1c;
+    color:white;
+    outline:none;
+}
+
+.profile-box textarea { resize:none; }
+
+.profile-box button {
+    margin-top:5px;
+    padding:8px 12px;
+    background:#FF2D55;
+    color:white;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+
+.profile-box button:hover { background:#ff4a70; }
+
+/* Avatar */
+.avatar { width:70px; height:70px; border-radius:50%; border:2px solid #FF2D55; object-fit:cover; cursor:pointer; margin-bottom:10px; }
+
+/* Album */
+#albumSection { width:90%; max-width:400px; margin-top:20px; }
+#albumContainer { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; }
+#albumContainer div { display:flex; flex-direction:column; align-items:center; }
+#albumContainer img { width:100px; height:100px; object-fit:cover; border-radius:10px; border:2px solid #FF2D55; }
+#albumContainer button { margin-top:4px; padding:4px 6px; font-size:12px; cursor:pointer; border-radius:6px; border:none; background:#ff2d55; color:white; transition:0.2s; }
+#albumContainer button:hover { background:#ff4a70; }
+#addPhotoBtn { margin-top:10px; padding:8px 12px; background:#FF2D55; color:white; border:none; border-radius:10px; cursor:pointer; }
+#addPhotoBtn:hover { background:#ff4a70; }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 15px; background:#1a1a1a; border-bottom:2px solid #ff2d55;">
+    <img id="topAvatar" src="avatar.png" class="avatar">
+    <div id="headerPseudo" style="font-weight:bold; font-size:20px;"></div>
+    <button onclick="location.href='index.html'" style="padding:8px 12px; background:#FF2D55; border:none; border-radius:8px; cursor:pointer; color:white;">⬅ Retour</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="profile-box">
+      <img id="profileAvatar" src="avatar.png" class="avatar">
+      <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="changeAvatar(event)">
+     
+      <input type="text" id="pseudo" placeholder="Pseudo">
+      <input type="number" id="age" placeholder="Âge">
+      <textarea id="bio" rows="3" placeholder="Bio"></textarea>
+      <button onclick="saveProfile()">💾 Sauvegarder</button>
+      <button onclick="openAlbum()">📷 Mes Albums</button>
+  </div>
+
+  <!-- Album -->
+  <div id="albumSection">
+    <h3>📸 Album</h3>
+    <div id="albumContainer"></div>
+    <button id="addPhotoBtn">Ajouter une photo</button>
+  </div>
+</div>
+
+<script>
+// ================= AUTH =================
+const currentUser = localStorage.getItem("currentUser");
+if(!currentUser){ window.location.href = "login.html"; }
+
+const isAnonymous = currentUser.startsWith("Ano_");
+
+// ================= PROFIL =================
+const profilePseudo = currentUser;
+const profileAvatar = document.getElementById("profileAvatar");
+const topAvatar = document.getElementById("topAvatar");
+const headerPseudo = document.getElementById("headerPseudo");
+const pseudoInput = document.getElementById("pseudo");
+const ageInput = document.getElementById("age");
+const bioInput = document.getElementById("bio");
+
+function loadProfile(){
+    const profile = JSON.parse(localStorage.getItem("profile_" + profilePseudo)) || {pseudo:profilePseudo, age:'', bio:'', avatar:"avatar.png"};
+    pseudoInput.value = profile.pseudo;
+    ageInput.value = profile.age;
+    bioInput.value = profile.bio;
+    profileAvatar.src = profile.avatar;
+    topAvatar.src = profile.avatar;
+    headerPseudo.textContent = profile.pseudo;
+
+    if(isAnonymous){
+        pseudoInput.disabled = true;
+        ageInput.disabled = true;
+        bioInput.disabled = true;
+        document.getElementById("addPhotoBtn").style.display = "none";
+    }
+}
+
+function changeAvatar(e){
+    const file = e.target.files[0];
+    if(file){
+        const reader = new FileReader();
+        reader.onload = function(ev){
+            profileAvatar.src = ev.target.result;
+            topAvatar.src = ev.target.result;
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+function saveProfile(){
+    if(isAnonymous) return;
+    const profile = {
+        pseudo: pseudoInput.value,
+        age: ageInput.value,
+        bio: bioInput.value,
+        avatar: profileAvatar.src
+    };
+    localStorage.setItem("profile_" + profilePseudo, JSON.stringify(profile));
+    headerPseudo.textContent = profile.pseudo;
+    alert("Profil sauvegardé !");
+}
+
+// ================= ALBUM =================
+const albumContainer = document.getElementById("albumContainer");
+const addPhotoBtn = document.getElementById("addPhotoBtn");
+let album = JSON.parse(localStorage.getItem("album_" + profilePseudo)) || [];
+
+function renderAlbum(){
+    albumContainer.innerHTML = "";
+    album.forEach((photo, idx)=>{
+        const img = document.createElement("img");
+        img.src = photo.url;
+        img.style.opacity = (photo.allowed && !photo.allowed.includes(currentUser) && currentUser!==profilePseudo) ? "0.3" : "1";
+
+        const btn = document.createElement("button");
+        btn.textContent = "Autoriser";
+
+        if(currentUser===profilePseudo && !isAnonymous){
+            btn.onclick = ()=>{
+                const pseudo = prompt("Pseudo de l'utilisateur à autoriser à voir cette photo :");
+                if(pseudo){
+                    photo.allowed = photo.allowed || [];
+                    if(!photo.allowed.includes(pseudo)) photo.allowed.push(pseudo);
+                    localStorage.setItem("album_" + profilePseudo, JSON.stringify(album));
+                    renderAlbum();
+                    alert(pseudo + " peut voir cette photo !");
+                }
+            }
+        } else {
+            btn.style.display="none";
+        }
+
+        const wrapper = document.createElement("div");
+        wrapper.appendChild(img);
+        wrapper.appendChild(btn);
+        albumContainer.appendChild(wrapper);
+    });
+}
+
+addPhotoBtn.onclick = function(){
+    if(currentUser!==profilePseudo || isAnonymous){
+        alert("Vous ne pouvez pas modifier cet album !");
+        return;
+    }
+    const fileInput = document.createElement("input");
+    fileInput.type="file"; fileInput.accept="image/*";
+    fileInput.onchange = function(e){
+        const file = e.target.files[0];
+        if(file){
+            const reader = new FileReader();
+            reader.onload = function(ev){
+                album.push({url: ev.target.result, allowed: []});
+                localStorage.setItem("album_" + profilePseudo, JSON.stringify(album));
+                renderAlbum();
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+    fileInput.click();
+}
+
+// ================= INIT =================
+loadProfile();
+renderAlbum();
+</script>
+</body>
+</html>

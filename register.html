@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inscription - Nexo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>Inscription - Nexo</header>
+
+<div class="container">
+  <input type="text" id="pseudo" placeholder="Pseudo">
+  <input type="password" id="password" placeholder="Mot de passe">
+  <input type="password" id="confirmPassword" placeholder="Confirmer mot de passe">
+  <button onclick="register()">S'inscrire</button>
+  <button onclick="location.href='login.html'">Retour</button>
+</div>
+
+<script>
+function register() {
+  const pseudo = document.getElementById('pseudo').value.trim();
+  const password = document.getElementById('password').value.trim();
+  const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+  if (!pseudo || !password || !confirmPassword) {
+    alert("Tous les champs sont obligatoires !");
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    alert("Les mots de passe ne correspondent pas !");
+    return;
+  }
+
+  let users = JSON.parse(localStorage.getItem('users') || "[]");
+  if(users.find(u => u.pseudo === pseudo)){
+    alert("Ce pseudo est déjà utilisé !");
+    return;
+  }
+
+  users.push({pseudo, password});
+  localStorage.setItem('users', JSON.stringify(users));
+
+  alert("Inscription réussie !");
+  window.location.href = 'login.html';
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mes albums - Nexo</title>
+<link rel="stylesheet" href="style.css">
+
+<style>
+/* Style minimal pour ne PAS casser ton design Nexo */
+.album-grid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:10px;
+  padding:15px;
+}
+
+.album-card{
+  position:relative;
+  border-radius:12px;
+  overflow:hidden;
+  background:#1c1c1c;
+}
+
+.album-card img{
+  width:100%;
+  height:120px;
+  object-fit:cover;
+}
+
+.delete-btn{
+  position:absolute;
+  top:5px;
+  right:5px;
+  border:none;
+  border-radius:50%;
+  width:25px;
+  height:25px;
+  background:red;
+  color:white;
+  cursor:pointer;
+}
+
+.album-actions{
+  text-align:center;
+  margin:15px;
+}
+</style>
+</head>
+<body>
+
+<header>Mes Albums</header>
+
+<div class="album-actions">
+  <button onclick="addPhoto()">➕ Ajouter une photo</button>
+  <button onclick="goBack()">⬅ Retour</button>
+</div>
+
+<div class="album-grid" id="albumGrid"></div>
+
+<script>
+const currentUser = localStorage.getItem("currentUser");
+
+// Sécurité
+if (!currentUser) {
+  window.location.href = "login.html";
+}
+
+// Bloquer anonymes (comme Grindr)
+if (currentUser.startsWith("Ano_")) {
+  alert("Les profils anonymes ne peuvent pas accéder aux albums.");
+  window.location.href = "index.html";
+}
+
+// Charger album spécifique à l'utilisateur
+let album = JSON.parse(localStorage.getItem("album_" + currentUser)) || [];
+
+function saveAlbum(){
+  localStorage.setItem("album_" + currentUser, JSON.stringify(album));
+}
+
+function displayAlbum(){
+  const grid = document.getElementById("albumGrid");
+  grid.innerHTML = "";
+
+  if(album.length === 0){
+    grid.innerHTML = "<p style='text-align:center;width:100%'>Aucune photo dans ton album</p>";
+    return;
+  }
+
+  album.forEach((photo, index) => {
+    const card = document.createElement("div");
+    card.className = "album-card";
+
+    card.innerHTML = `
+      <img src="${photo}" alt="photo album">
+      <button class="delete-btn" onclick="deletePhoto(${index})">✕</button>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+function addPhoto(){
+  const url = prompt("Colle l'URL de ta photo :");
+  if(!url) return;
+
+  album.push(url);
+  saveAlbum();
+  displayAlbum();
+}
+
+function deletePhoto(index){
+  if(confirm("Supprimer cette photo ?")){
+    album.splice(index, 1);
+    saveAlbum();
+    displayAlbum();
+  }
+}
+
+function goBack(){
+  window.location.href = "edit-profile.html";
+}
+
+displayAlbum();
+</script>
+
+</body>
+</html>

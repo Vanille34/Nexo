@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Administrateur</title>
+<style>
+body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
+header { background:#1a1a1a; padding:15px; font-size:20px; font-weight:bold; text-align:center; border-bottom:1px solid #333; }
+.container { width:90%; margin:20px auto; text-align:center; }
+select, input { padding:8px; margin:5px; border-radius:6px; border:none; }
+button { padding:8px 12px; border:none; border-radius:6px; background:#ff2d55; color:white; cursor:pointer; margin:5px; }
+</style>
+</head>
+<body>
+<header>Panel Administrateur</header>
+
+<div class="container">
+  <label for="userSelect">Sélectionner un utilisateur :</label>
+  <select id="userSelect"></select>
+  <div>
+    <button onclick="toggleGold()">💎 Donner/Retirer Gold</button>
+    <input type="number" id="tempBanInput" placeholder="Heures">
+    <button onclick="tempBan()">Bannir temporairement</button>
+    <button onclick="permBan()">Bannir définitivement</button>
+    <button onclick="unban()">Débannir</button>
+    <button onclick="deleteUser()">❌ Supprimer le profil</button>
+  </div>
+  <div id="status" style="margin-top:15px;"></div>
+</div>
+
+<script>
+// Vérifie admin
+const currentUser = localStorage.getItem("currentUser");
+if(currentUser !== "admin_nexo") window.location.href="login.html";
+
+// Liste utilisateurs réels
+let allUsers = JSON.parse(localStorage.getItem("allUsers")) || [];
+allUsers = allUsers.filter(u => u !== "admin_nexo"); // exclut admin
+
+let goldUsers = JSON.parse(localStorage.getItem("goldUsers")) || [];
+let bannedUsers = JSON.parse(localStorage.getItem("bannedUsers")) || {}; // {pseudo: timestamp ou "PERM"}
+
+const userSelect = document.getElementById("userSelect");
+const statusDiv = document.getElementById("status");
+
+function renderSelect(){
+  userSelect.innerHTML = "";
+  allUsers.forEach(u=>{
+    const option = document.createElement("option");
+    option.value = u;
+    option.textContent = u;
+    userSelect.appendChild(option);
+  });
+  updateStatus();
+}
+
+function getSelectedUser(){ return userSelect.value; }
+
+function updateStatus(){
+  const user = getSelectedUser();
+  if(!user) return;
+  let s = "";
+  s += goldUsers.includes(user) ? "💎 Gold activé" : "❌ Gold désactivé";
+  const ban = bannedUsers[user];
+  if(ban){
+    if(ban === "PERM") s += " | 🚫 Banni définitivement";
+    else {
+      const h = Math.ceil((ban-Date.now())/3600000);
+      s += " | ⏱️ Banni temporairement ("+h+"h restantes)";
+    }
+  }
+  statusDiv.textContent = s;
+}
+
+// Actions
+function toggleGold(){
+  const user = getSelectedUser();
+  if(!user) return;
+  if(goldUsers.includes(user)) goldUsers = goldUsers.filter(u=>u!==user);
+  else goldUsers.push(user);
+  localStorage.setItem("goldUsers", JSON.stringify(goldUsers));
+  updateStatus();
+}
+
+function tempBan(){
+  const user = getSelectedUser();
+  if(!user) return;
+  const h = parseInt(document.getElementById("tempBanInput").value);
+  if(isNaN(h) || h<=0){ alert("Veuillez entrer un nombre d'heures valide"); return; }
+  bannedUsers[user] = Date.now() + h*3600000;
+  localStorage.setItem("bannedUsers", JSON.stringify(bannedUsers));
+  updateStatus();
+}
+
+function permBan(){
+  const user = getSelectedUser();
+  if(!user) return;
+  bannedUsers[user] = "PERM";
+  localStorage.setItem("bannedUsers", JSON.stringify(bannedUsers));
+  updateStatus();
+}
+
+function unban(){
+  const user = getSelectedUser();
+  if(!user) return;
+  delete bannedUsers[user];
+  localStorage.setItem("bannedUsers", JSON.stringify(bannedUsers));
+  updateStatus();
+}
+
+// ✅ Supprimer l’utilisateur
+function deleteUser(){
+  const user = getSelectedUser();
+  if(!user) return;
+  if(!confirm("⚠️ Confirmer la suppression du profil de "+user+" ?")) return;
+
+  // Supprime profil
+  localStorage.removeItem("profile_" + user);
+
+  // Supprime de allUsers
+  allUsers = allUsers.filter(u=>u!==user);
+  localStorage.setItem("allUsers", JSON.stringify(allUsers));
+
+  // Supprime du goldUsers
+  goldUsers = goldUsers.filter(u=>u!==user);
+  localStorage.setItem("goldUsers", JSON.stringify(goldUsers));
+
+  // Supprime du bannedUsers
+  if(bannedUsers[user]){
+    delete bannedUsers[user];
+    localStorage.setItem("bannedUsers", JSON.stringify(bannedUsers));
+  }
+
+  alert("Profil supprimé ✅");
+  renderSelect();
+}
+
+userSelect.addEventListener("change", updateStatus);
+
+renderSelect();
+</script>
+</body>
+</html>

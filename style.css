@@ -1,0 +1,259 @@
+/* ================= GLOBAL ================= */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f0f0f;
+    color: white;
+}
+
+/* ================= HEADER ================= */
+header {
+    background: #1a1a1a;
+    padding: 15px;
+    font-size: 18px;
+    border-bottom: 2px solid #ff2d55;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* ================= GRILLE PROFILS STYLE GRINDR ================= */
+.container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    padding: 10px;
+}
+
+/* Carte profil */
+.profile-card {
+    background: #1c1c1c;
+    border-radius: 15px;
+    padding: 15px;
+    text-align: center;
+    position: relative;
+    border: 1px solid #ff2d55;
+    transition: transform 0.2s;
+    cursor: pointer;
+}
+
+.profile-card:hover {
+    transform: scale(1.03);
+}
+
+/* Avatar */
+.avatar {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #ff2d55;
+    margin-bottom: 8px;
+    font-size: 40px;
+}
+
+/* Nom et infos */
+.name {
+    font-weight: bold;
+    margin-top: 5px;
+    font-size: 16px;
+}
+
+.info {
+    font-size: 12px;
+    color: #bbb;
+}
+
+/* Voyant en ligne */
+.status {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+/* ================= PROFILS ANONYMES ================= */
+.profile-card.anonymous .avatar {
+    border-color: #2d8cff; /* bleu pour les anonymes */
+}
+
+/* ================= BOUTONS ================= */
+button {
+    padding: 8px 12px;
+    margin-top: 5px;
+    margin-right: 5px;
+    background-color: #ff2d55;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #ff4a70;
+}
+
+/* Inputs login/register */
+input[type=text], input[type=password] {
+    width: 95%;
+    padding: 8px;
+    margin-bottom: 10px;
+    border: 2px solid #ff2d55;
+    border-radius: 10px;
+    background-color: #1c1c1c;
+    color: white;
+    outline: none;
+}
+
+input[type=text]::placeholder,
+input[type=password]::placeholder {
+    color: #FFB3C6;
+}
+
+/* ================= BANNIERE PUB ================= */
+.ad-banner {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #111;
+    text-align: center;
+    padding: 10px;
+    border-top: 2px solid #ff2d55;
+    font-size: 14px;
+}
+
+/* ================= CHAT ================= */
+.chat-header {
+    background: #1a1a1a;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-bottom: 2px solid #ff2d55;
+}
+
+.chat-user {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.chat-username {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.chat-header button {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background-color: #555;
+    color: white;
+}
+
+.chat-header button:hover {
+    background-color: #ff2d55;
+}
+
+/* ================= CHAT FIL ================= */
+.chat-messages {
+    padding: 10px;
+    height: 70vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.message {
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    max-width: 70%;
+}
+
+.from-me {
+    background-color: #ff2d55;
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.from-them {
+    background-color: #333;
+    align-self: flex-start;
+}
+
+.message.system {
+    background-color: #1a1a2e; /* couleur spéciale notification */
+    color: white;
+    text-align: center;
+    margin: 10px auto;
+    border: 1px solid #2d8cff;
+    max-width: 90%;
+}
+
+.message.system button {
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: none;
+    background-color: #2d8cff;
+    color: white;
+    cursor: pointer;
+}
+
+.message.system button:hover {
+    background-color: #1a6bff;
+}
+
+/* ================= INPUT CHAT ================= */
+.chat-input {
+    display: flex;
+    padding: 10px;
+    border-top: 2px solid #ff2d55;
+    background: #1a1a1a;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 10px;
+    border: 2px solid #ff2d55;
+    background: #1c1c1c;
+    color: white;
+    outline: none;
+}
+
+.chat-input input::placeholder {
+    color: #FFB3C6;
+}
+
+.chat-input button {
+    padding: 8px 12px;
+    margin-left: 5px;
+    border-radius: 10px;
+    border: none;
+    background-color: #ff2d55;
+    color: white;
+    cursor: pointer;
+}
+
+.chat-input button:hover {
+    background-color: #ff4a70;
+}
+
+/* ================= BOUTON PARTAGER ALBUM ================= */
+.btn-share {
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
+    background-color: #555;
+    color: white;
+    cursor: pointer;
+}
+
+.btn-share:hover {
+    background-color: #ff2d55;
+}

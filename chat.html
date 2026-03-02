@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Nexo</title>
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f0f0f;
+    color: white;
+    display: flex;
+    height: 100vh;
+}
+
+/* PROFIL À GAUCHE */
+.profile-panel {
+    width: 200px;
+    background: #1a1a1a;
+    border-right: 2px solid #ff2d55;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.profile-panel div {
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    transition: background 0.2s;
+}
+
+.profile-panel div:hover {
+    background: #333;
+}
+
+/* CHAT AU CENTRE */
+.chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* HEADER DU CHAT */
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #1a1a1a;
+    border-bottom: 2px solid #ff2d55;
+    height: 50px;
+    font-weight: bold;
+}
+
+/* CONTAINER DES MESSAGES */
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 10px;
+    gap: 10px;
+}
+
+.message {
+    max-width: 70%;
+    padding: 10px 14px;
+    border-radius: 15px;
+    font-size: 14px;
+    word-wrap: break-word;
+}
+
+.from-me { align-self: flex-end; background-color: #ff2d55; margin-left: auto; }
+.from-them { align-self: flex-start; background-color: #333; }
+
+.message.album {
+    align-self: center;
+    background-color: #8000ff;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    padding: 12px;
+}
+
+/* ZONE D’ENVOI */
+.chat-input-wrapper {
+    display: flex;
+    padding: 8px;
+    border-top: 2px solid #ff2d55;
+    background-color: #1a1a1a;
+    gap: 6px;
+}
+
+.chat-input-wrapper input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    border: 2px solid #ff2d55;
+    background-color: #1c1c1c;
+    color: white;
+    outline: none;
+}
+
+.chat-input-wrapper input::placeholder { color: #FFB3C6; }
+
+.chat-input-wrapper button {
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.send-btn { background-color: #ff2d55; }
+.send-btn:hover { background-color: #ff4a70; }
+
+.album-btn { background-color: #555; }
+.album-btn:hover { background-color: #FFD700; }
+
+@media(max-width:600px){
+    .profile-panel { display: none; }
+    .chat-container { padding: 5px; }
+    .chat-input-wrapper input, .chat-input-wrapper button { font-size: 12px; padding: 6px; }
+}
+</style>
+</head>
+<body>
+
+<div class="profile-panel">
+    <div data-username="Alex">👤 Alex</div>
+    <div data-username="Marie">👤 Marie</div>
+    <div data-username="Paul">👤 Paul</div>
+</div>
+
+<div class="chat-area">
+    <div class="chat-header" id="chat-username">Sélectionnez un profil</div>
+    <div id="chat-messages" class="chat-container"></div>
+    <div id="chat-input-container"></div>
+</div>
+
+<script>
+let currentChatUser = null;
+
+// Simule des messages stockés
+const messageDB = {
+    "Alex": ["Salut !", "Comment ça va ?"],
+    "Marie": ["Bonjour !", "Tu veux le café ?"],
+    "Paul": ["Yo !", "Ça roule ?"]
+};
+
+// Affiche le chat d’un utilisateur
+function loadChat(username){
+    currentChatUser = username;
+    document.getElementById('chat-username').textContent = username;
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.innerHTML = '';
+
+    // Charger les messages simulés
+    if(messageDB[username]){
+        messageDB[username].forEach(msg => addIncomingMessage(username, msg));
+    }
+
+    renderChatInput();
+}
+
+// Ajouter message entrant
+function addIncomingMessage(username, text){
+    const chatMessages = document.getElementById('chat-messages');
+    const msg = document.createElement('div');
+    msg.className='message from-them';
+    msg.textContent=`${username}: ${text}`;
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop=chatMessages.scrollHeight;
+}
+
+// Ajouter message sortant
+function addOutgoingMessage(text){
+    if(!currentChatUser) return;
+    const chatMessages = document.getElementById('chat-messages');
+    const msg = document.createElement('div');
+    msg.className='message from-me';
+    msg.textContent=text;
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop=chatMessages.scrollHeight;
+}
+
+// Génère la zone d’envoi avec bouton Album
+function renderChatInput(){
+    const container = document.getElementById('chat-input-container');
+    container.innerHTML = '';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'chat-input-wrapper';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Tapez un message...';
+    input.id = 'chat-text';
+
+    const sendBtn = document.createElement('button');
+    sendBtn.className = 'send-btn';
+    sendBtn.textContent = 'Envoyer';
+    sendBtn.onclick = () => {
+        const val = input.value.trim();
+        if(!val) return;
+        addOutgoingMessage(val);
+        input.value = '';
+    };
+
+    const albumBtn = document.createElement('button');
+    albumBtn.className = 'album-btn';
+    albumBtn.textContent = '📸 Album';
+    albumBtn.onclick = () => {
+        if(!currentChatUser) return;
+        const chatMessages = document.getElementById('chat-messages');
+
+        const albumMsg = document.createElement('div');
+        albumMsg.className='message album';
+        albumMsg.textContent='📸 Album reçu ! Clique pour ouvrir';
+        albumMsg.onclick = () => {
+            alert(`${currentChatUser} ouvre l’album.`);
+            albumMsg.remove();
+        };
+
+        chatMessages.appendChild(albumMsg);
+        chatMessages.scrollTop=chatMessages.scrollHeight;
+    };
+
+    wrapper.appendChild(input);
+    wrapper.appendChild(sendBtn);
+    wrapper.appendChild(albumBtn);
+    container.appendChild(wrapper);
+}
+
+// Événement clic sur profil
+document.querySelectorAll('.profile-panel div').forEach(profile => {
+    profile.addEventListener('click', () => {
+        const username = profile.getAttribute('data-username');
+        loadChat(username);
+    });
+});
+</script>
+
+</body>
+</html>
