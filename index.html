@@ -4,115 +4,246 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Profils</title>
+
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#0f0f14;color:white;}
-.top-bar{display:flex;align-items:center;gap:8px;padding:10px;background:#111;border-bottom:2px solid #ff2d55;position:sticky;top:0;z-index:10;}
-.my-profile{width:42px;height:42px;border-radius:50%;border:2px solid #ff2d55;object-fit:cover;cursor:pointer;}
-.search-input{flex:1;padding:8px 10px;border-radius:10px;border:1px solid #333;background:#0a0a0a;color:white;outline:none;font-size:13px;}
-.filter-btn{padding:7px 9px;border-radius:10px;border:none;background:#1b1b1b;color:white;font-size:12px;cursor:pointer;border:1px solid #333;}
-.filter-btn.active{background:#ff2d55;border-color:#ff2d55;}
-.cards-container{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px;}
-.profile-card{position:relative;background:#111;border-radius:12px;overflow:hidden;border:1.5px solid #ff2d55;cursor:pointer;}
-.profile-card img{width:100%;height:115px;object-fit:cover;}
-.online-dot{position:absolute;top:6px;left:6px;width:11px;height:11px;border-radius:50%;border:2px solid #0f0f14;}
-.profile-info{padding:6px;}
-.profile-name{font-size:13px;font-weight:bold;}
-.profile-distance{font-size:11px;color:#cfcfcf;}
-.profile-bio{font-size:10px;color:#9a9a9a;}
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#0f0f14;
+    color:white;
+}
+
+/* 🔥 BANNIÈRE HAUTE */
+.top-bar{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:10px;
+    background:#111;
+    border-bottom:2px solid #ff2d55;
+    position:sticky;
+    top:0;
+    z-index:10;
+}
+
+/* CERCLE MON PROFIL */
+.my-profile{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    border:2px solid #ff2d55;
+    object-fit:cover;
+    cursor:pointer;
+}
+
+/* BARRE DE RECHERCHE */
+.search-input{
+    flex:1;
+    padding:8px 10px;
+    border-radius:10px;
+    border:1px solid #333;
+    background:#0a0a0a;
+    color:white;
+    outline:none;
+    font-size:13px;
+}
+
+/* BOUTONS FILTRE */
+.filter-btn{
+    padding:7px 9px;
+    border-radius:10px;
+    border:none;
+    background:#1b1b1b;
+    color:white;
+    font-size:12px;
+    cursor:pointer;
+    border:1px solid #333;
+}
+
+.filter-btn.active{
+    background:#ff2d55;
+    border-color:#ff2d55;
+}
+
+/* 3 COLONNES */
+.cards-container{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap:8px;
+    padding:10px;
+}
+
+/* CARTE STYLE APP */
+.profile-card{
+    position:relative;
+    background:#111;
+    border-radius:12px;
+    overflow:hidden;
+    border:1.5px solid #ff2d55;
+    cursor:pointer;
+}
+
+.profile-card img{
+    width:100%;
+    height:115px;
+    object-fit:cover;
+}
+
+/* PASTILLE ONLINE */
+.online-dot{
+    position:absolute;
+    top:6px;
+    left:6px;
+    width:11px;
+    height:11px;
+    border-radius:50%;
+    border:2px solid #0f0f14;
+}
+
+/* BOUTON ABONNÉ */
+.subscribe-btn{
+    position:absolute;
+    top:6px;
+    right:6px;
+    font-size:18px;
+    cursor:pointer;
+    user-select:none;
+    transition:0.2s;
+}
+
+/* Effet glow rouge pour abonnés */
+.subscribe-btn.following{
+    color:#ff2d55;
+    text-shadow: 0 0 12px #ff2d55, 0 0 20px #ff2d55, 0 0 28px #ff2d55;
+}
+
+/* INFOS */
+.profile-info{
+    padding:6px;
+}
+
+.profile-name{
+    font-size:13px;
+    font-weight:bold;
+}
+
+.profile-distance{
+    font-size:11px;
+    color:#cfcfcf;
+}
+
+.profile-bio{
+    font-size:10px;
+    color:#9a9a9a;
+}
 </style>
 </head>
+
 <body>
 
 <div class="top-bar">
-  <img src="https://randomuser.me/api/portraits/men/75.jpg" class="my-profile" onclick="editMyProfile()">
-  <input type="text" class="search-input" id="searchInput" placeholder="Rechercher un profil...">
-  <button class="filter-btn" id="distanceBtn">📍</button>
-  <button class="filter-btn" id="subBtn">🔥</button>
-  <button class="filter-btn" id="onlineBtn">🟢</button>
-  <button class="filter-btn" id="nowBtn" style="background:#ff2d55;">NOW</button>
+    <img src="https://randomuser.me/api/portraits/men/75.jpg" class="my-profile" onclick="editMyProfile()">
+    <input type="text" class="search-input" id="searchInput" placeholder="Rechercher un profil...">
+    <button class="filter-btn" id="distanceBtn">📍</button>
+    <button class="filter-btn" id="subBtn">🔥</button>
+    <button class="filter-btn" id="onlineBtn">🟢</button>
+    <button class="filter-btn" id="nowBtn" style="background:#ff2d55;">NOW</button>
 </div>
 
+<!-- GRILLE PROFILS -->
 <div class="cards-container" id="cardsContainer"></div>
 
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
+<script>
+const userLocation = { lat: 43.30, lon: 3.20 };
+let showOnlineOnly=false, showSubscribedOnly=false, sortByDistance=false;
 
-// 🔹 Config Firebase (remplace par ta config)
-const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT_ID.firebaseapp.com",
-  projectId: "PROJECT_ID",
-  storageBucket: "PROJECT_ID.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
-};
+const profiles = [
+    {id:1,name:"Remi",age:30,bio:"Disponible",photo:"https://randomuser.me/api/portraits/men/32.jpg",lat:43.301,lon:3.198,online:true},
+    {id:2,name:"Léa",age:25,bio:"Aime discuter",photo:"https://randomuser.me/api/portraits/women/44.jpg",lat:43.315,lon:3.210,online:false},
+    {id:3,name:"Alex",age:27,bio:"Sport & chill",photo:"https://randomuser.me/api/portraits/men/68.jpg",lat:43.289,lon:3.185,online:true}
+];
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+let subscribed = new Set(JSON.parse(localStorage.getItem("subscribed"))||[]);
 
-// 🔹 Sélection du container
-const container = document.getElementById("cardsContainer");
-const searchInput = document.getElementById("searchInput");
-
-// 🔹 Récupérer profils depuis Firestore
-let profiles = [];
-async function fetchProfiles() {
-  const querySnapshot = await getDocs(collection(db, "profiles"));
-  profiles = querySnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-  renderProfiles();
-}
-
-// 🔹 Fonction distance (optionnelle)
-function calculateDistance(lat1, lon1, lat2, lon2){
-  const R=6371;
-  const dLat=(lat2-lat1)*Math.PI/180;
-  const dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-  return R*c;
+function calculateDistance(lat1,lon1,lat2,lon2){
+    const R=6371;
+    const dLat=(lat2-lat1)*Math.PI/180;
+    const dLon=(lon2-lon1)*Math.PI/180;
+    const a=Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
+    const c=2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+    return R*c;
 }
 
 function formatDistance(km){
-  return km<1?Math.round(km*1000)+" m":km.toFixed(1)+" km";
+    return km<1?Math.round(km*1000)+" m":km.toFixed(1)+" km";
 }
 
-// 🔹 Rendu profils
+const container=document.getElementById("cardsContainer");
+const searchInput=document.getElementById("searchInput");
+const onlineBtn=document.getElementById("onlineBtn");
+const subBtn=document.getElementById("subBtn");
+const distanceBtn=document.getElementById("distanceBtn");
+const nowBtn=document.getElementById("nowBtn");
+
 function renderProfiles(){
-  container.innerHTML="";
-  const search = searchInput.value.toLowerCase();
-  profiles.filter(p => !search || p.name.toLowerCase().includes(search))
-    .forEach(profile => {
-      const card = document.createElement("div");
-      card.className = "profile-card";
-      card.onclick = () => openProfile(profile);
-      card.innerHTML = `
-        <img src="${profile.photo}">
-        <div class="online-dot" style="background:${profile.online?'#00ff66':'#555'}"></div>
-        <div class="profile-info">
-          <div class="profile-name">${profile.name}, ${profile.age}</div>
-          <div class="profile-bio">${profile.bio}</div>
-        </div>
-      `;
-      container.appendChild(card);
+    container.innerHTML="";
+    let filtered=[...profiles];
+    const search=searchInput.value.toLowerCase();
+    if(search) filtered=filtered.filter(p=>p.name.toLowerCase().includes(search));
+    if(showOnlineOnly) filtered=filtered.filter(p=>p.online);
+    if(showSubscribedOnly) filtered=filtered.filter(p=>subscribed.has(p.id));
+    if(sortByDistance) filtered.sort((a,b)=>calculateDistance(userLocation.lat,userLocation.lon,a.lat,a.lon)-calculateDistance(userLocation.lat,userLocation.lon,b.lat,b.lon));
+
+    filtered.forEach(profile=>{
+        const dist=calculateDistance(userLocation.lat,userLocation.lon,profile.lat,profile.lon);
+        const card=document.createElement("div");
+        card.className="profile-card";
+        card.onclick=()=>openProfile(profile);
+        const isSubscribed=subscribed.has(profile.id);
+        const subIcon="🔥";
+        const subClass=isSubscribed?"subscribe-btn following":"subscribe-btn";
+        card.innerHTML=`
+            <img src="${profile.photo}">
+            <div class="online-dot" style="background:${profile.online?'#00ff66':'#555'}"></div>
+            <div class="${subClass}" onclick="toggleSubscribe(event,${profile.id})">${subIcon}</div>
+            <div class="profile-info">
+                <div class="profile-name">${profile.name}, ${profile.age}</div>
+                <div class="profile-distance">${formatDistance(dist)}</div>
+                <div class="profile-bio">${profile.bio}</div>
+            </div>
+        `;
+        container.appendChild(card);
     });
 }
 
-// 🔹 Profils secondaires
+function toggleSubscribe(event,id){
+    event.stopPropagation();
+    subscribed.has(id)?subscribed.delete(id):subscribed.add(id);
+    localStorage.setItem("subscribed",JSON.stringify([...subscribed]));
+    renderProfiles();
+}
+
+searchInput.addEventListener("input",renderProfiles);
+onlineBtn.onclick=()=>{showOnlineOnly=!showOnlineOnly; onlineBtn.classList.toggle("active"); renderProfiles();}
+subBtn.onclick=()=>{showSubscribedOnly=!showSubscribedOnly; subBtn.classList.toggle("active"); renderProfiles();}
+distanceBtn.onclick=()=>{sortByDistance=!sortByDistance; distanceBtn.classList.toggle("active"); renderProfiles();}
+
+// NOW redirige directement vers now.html
+nowBtn.onclick = () => {
+    window.location.href = "now.html";
+}
+
+// Profils secondaires
 function openProfile(profile){
-  localStorage.setItem("selectedProfile", JSON.stringify(profile));
-  window.location.href = "view-profile.html";
+    localStorage.setItem("selectedProfile",JSON.stringify(profile));
+    window.location.href="view-profile.html";
 }
 
 function editMyProfile(){
-  window.location.href="edit-profile.html";
+    window.location.href="edit-profile.html";
 }
 
-searchInput.addEventListener("input", renderProfiles);
-
-// 🔹 Charger profils
-fetchProfiles();
+renderProfiles();
 </script>
 
 </body>
